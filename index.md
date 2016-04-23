@@ -2,9 +2,9 @@
 title: "Basics"
 name: "MongoDB"
 repo: "https://github.com/seedstack/mongodb-addon"
-author: "SeedStack"
+date: 2016-02-09
+author: Adrien LAUER
 description: "Provides configuration and injection for synchronous and asynchronous MongoDB clients."
-min-version: "15.11+"
 backend: true
 weight: -1
 tags:
