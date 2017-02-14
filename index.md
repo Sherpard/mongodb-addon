@@ -416,7 +416,7 @@ public class MorphiaIT extends AbstractSeedIT{
 
 ## Repositories
 
-The Morphia addon also provides repositories which can be use with the [Business Framework](http://seedstack.org/docs/business/).
+The Morphia addon also provides repositories which can be use with the [Business Framework]({{< ref "docs/business/index.md" >}}).
 Default repositories can be used by injecting the {{< java "org.seedstack.business.domain.Repository" >}} interface with
 both the `@Inject` and {{< java "org.seedstack.mongodb.morphia.Morphia" "@" >}} annotations as followed:
 
