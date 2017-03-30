@@ -4,11 +4,7 @@ repo: "https://github.com/seedstack/mongodb-addon"
 author: Adrien LAUER
 description: "Provides configuration and injection for synchronous and asynchronous MongoDB clients."
 tags:
-    - "persistence"
-    - "nosql"
-    - "mongodb"
-    - "data"
-    - "database"
+    - persistence
 zones:
     - Addons
 menu:
