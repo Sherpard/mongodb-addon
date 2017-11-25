@@ -1,6 +1,7 @@
 ---
 title: "Morphia"
 repo: "https://github.com/seedstack/mongodb-addon"
+parent: "MongoDB"
 weight: -1
 tags:
     - persistence
@@ -25,7 +26,7 @@ Morphia only works with synchronous MongoDB clients.
 {{% /callout %}}
 
 To configure Morphia, just specify the synchronous client and which one of its database to use for a mapping a specific class.
-This is done with SeedStack [class configuration]({{< ref "docs/seed/configuration.md#class-configuration" >}}): 
+This is done with SeedStack [class configuration]({{< ref "docs/core/configuration.md#class-configuration" >}}): 
 
 ```yaml
 mongoDb:
