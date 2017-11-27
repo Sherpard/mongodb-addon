@@ -1,21 +1,23 @@
 ---
 title: "MongoDB"
+addon: "MongoDB"
 repo: "https://github.com/seedstack/mongodb-addon"
 author: Adrien LAUER
-description: "Provides configuration and injection for synchronous and asynchronous MongoDB clients."
+description: "Provides configuration and injection for sync and async MongoDB clients."
 tags:
     - persistence
 zones:
     - Addons
 menu:
-    AddonMongoDB:
+    MongoDB:
+        parent: "contents"
         weight: 10
 ---
 
 SeedStack MongoDB add-on provides integration of MongoDB Java clients your application to connect with MongoDB instances. 
 <!--more-->
 
-# Dependencies
+## Dependencies
 
 Add the following dependency:
 
@@ -30,7 +32,7 @@ clients in the same application):
    
 {{< dependency g="org.mongodb" a="mongodb-driver-async" v="..." >}}
      
-# Configuration
+## Configuration
 
 Configuration is done by declaring one or more clients:
 
@@ -70,7 +72,7 @@ by default, to switch to the [asynchronous driver](http://mongodb.github.io/mong
 the `async` configuration property to `true`.
 {{% /callout %}}  
 
-## URI connection string          
+### URI connection string          
 
 The `uri` property is formatted as below:
   
@@ -88,7 +90,7 @@ the URI and its options can be found [here](http://docs.mongodb.org/manual/refer
 When no port is specified, the default MongoDB port is used (27017).
 {{% /callout %}}
 
-## Explicit hosts 
+### Explicit hosts 
 
 As an alternative a client can be configured by directly specifying the MongoDB host(s):
 
@@ -136,7 +138,7 @@ It is recommended to avoid specifying the authentication mechanism as it will be
 often, only one credential is enough.
 {{% /callout %}}
 
-## Databases
+### Databases
 
 You can choose to inject and use the `MongoClient` object(s) directly and access the database(s) programmatically. As a 
 convenience, the add-on also allows to inject the `MongoDatabase` object(s) provided they are configured as follow:
@@ -184,7 +186,7 @@ mongoDb:
 In this example, the `db2` database present on the MongoDB instance accessed by `client2` will be referred in the
 application by the `db2bis` name. Note that you can use this feature even when there are no name collision.
   
-## Synchronous client options
+### Synchronous client options
 
 Additional options can be specified on **synchronous** clients with the `options` property of the client.
  
@@ -207,7 +209,7 @@ If you use an URI configuration, you can combine the URI options with the `optio
 will complement their URI counterpart and override them if present in both.
 {{% /callout %}}                   
 
-## Asynchronous client options 
+### Asynchronous client options 
  
 Additional options can be specified on **asynchronous** clients with the `settings` property:
 
@@ -286,7 +288,7 @@ on the global builder [here](http://api.mongodb.org/java/current/com/mongodb/asy
 `credentials` properties.
 {{% /callout %}}
 
-# Usage
+## Usage
  
 As MongoDB does not support transactions, usage simply consists in injecting a `MongoClient` or a `MongoDatabase` object 
 and using it accordingly to the MongoDB documentation. As an example you can inject the client as the following:

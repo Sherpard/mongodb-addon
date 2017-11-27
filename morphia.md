@@ -1,5 +1,6 @@
 ---
 title: "Morphia"
+addon: "MongoDB"
 repo: "https://github.com/seedstack/mongodb-addon"
 parent: "MongoDB"
 weight: -1
@@ -8,18 +9,19 @@ tags:
 zones:
     - Addons
 menu:
-    AddonMongoDB:
+    MongoDB:
+        parent: "contents"
         weight: 20
 ---
 
 [Morphia](https://github.com/mongodb/morphia) is an Object/Document mapper. It provides annotation-based POJO mapping, 
 and fluent query/update APIs. SeedStack MongoDb add-on provides a module for Morphia.<!--more-->
  
-# Dependency 
+## Dependency 
 
 {{< dependency g="org.seedstack.addons.mongodb" a="mongodb-morphia" >}}
 
-# Configuration
+## Configuration
 
 {{% callout info %}}
 Morphia only works with synchronous MongoDB clients.
@@ -47,9 +49,9 @@ classes:
 The configuration above will use the MongoDb client `client1` and its database `db1` for mapping classes in the 
 `org.myorg.myapp.domain.model` package and its subpackages.
 
-# Basic usage
+## Basic usage
 
-## Mapping
+### Mapping
 
 Mapping is done with annotations:
 
@@ -78,7 +80,7 @@ public class Address {
 }
 ```
 
-## Datastore
+### Datastore
 
 A Morphia `Datastore` can be injected by qualifying the injection with the {{< java "org.seedstack.mongodb.morphia.MorphiaDatastore" "@" >}}
 annotation with the client and the database name as parameters::
@@ -97,11 +99,11 @@ public class SomeClass {
 }
 ```
 
-# Business framework usage
+## Business framework usage
 
 The Morphia add-on also provides repositories for the [Business Framework]({{< ref "docs/business/index.md" >}}).
 
-## Base for custom repositories
+### Base for custom repositories
 
 A base repository is provided for extension:
  
@@ -129,7 +131,7 @@ public class SomeClass {
 You can access the datastore of a Morphia repository by calling its `getDatastore()` method.
 {{% /callout %}}
 
-## Default repositories 
+### Default repositories 
 
 If you don't need repository custom methods, default repositories for all aggregates are automatically registered and 
 can be injected using {{< java "org.seedstack.business.domain.Repository" >}} interface with the 
