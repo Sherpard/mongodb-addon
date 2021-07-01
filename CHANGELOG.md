@@ -1,3 +1,9 @@
+# Version 3.0.3 (2021-07-02)
+
+* [fix] Avoid calling `ensureIndexes()` and `ensureCaps()` for each datastore instantiation which adds a considerable
+  overhead in some circumstances. It is now done at application startup and can be controlled with
+  `mongoDb.morphia.ensureCapsAtStartup` and `mongoDb.morphia.ensureIndexesAtStartup` config options.
+
 # Version 3.0.2 (2019-01-10)
 
 * [fix] Fix issue #11: an exception occurred at startup because the way of accessing the ValidationFactory changed. 

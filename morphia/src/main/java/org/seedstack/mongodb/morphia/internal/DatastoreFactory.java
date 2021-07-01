@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2019, The SeedStack authors <http://seedstack.org>
+ * Copyright © 2013-2021, The SeedStack authors <http://seedstack.org>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -34,20 +34,20 @@ public class DatastoreFactory {
     }
 
     public Datastore createDatastore(Class<?> morphiaClass) {
-        MorphiaDatastore datastoreAnnotation = createDatastoreAnnotation(application, morphiaClass);
+        return createDatastore(createDatastoreAnnotation(application, morphiaClass));
+    }
+
+    public Datastore createDatastore(MorphiaDatastore datastoreAnnotation) {
         return createDatastore(datastoreAnnotation.clientName(), datastoreAnnotation.dbName());
     }
 
     public Datastore createDatastore(String clientName, String dbName) {
-        Datastore datastore = morphia.createDatastore(
+        return morphia.createDatastore(
                 injector.getInstance(Key.get(MongoClient.class, Names.named(clientName))),
                 MorphiaUtils.resolveDatabaseAlias(
                         getMongoClientConfig(application, clientName),
                         dbName
                 )
         );
-        datastore.ensureIndexes(true);
-        datastore.ensureCaps();
-        return datastore;
     }
 }
