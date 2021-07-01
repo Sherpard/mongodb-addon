@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2020, The SeedStack authors <http://seedstack.org>
+ * Copyright © 2013-2021, The SeedStack authors <http://seedstack.org>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,8 +10,10 @@ package org.seedstack.mongodb.morphia.internal;
 import com.google.common.collect.Lists;
 import dev.morphia.Morphia;
 import io.nuun.kernel.api.plugin.InitState;
+import io.nuun.kernel.api.plugin.context.Context;
 import io.nuun.kernel.api.plugin.context.InitContext;
 import io.nuun.kernel.api.plugin.request.ClasspathScanRequest;
+import org.seedstack.mongodb.morphia.MorphiaConfig;
 import org.seedstack.mongodb.morphia.MorphiaDatastore;
 import org.seedstack.seed.Application;
 import org.seedstack.seed.core.internal.AbstractSeedPlugin;
@@ -20,6 +22,7 @@ import org.seedstack.seed.core.internal.validation.ValidationPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -30,6 +33,9 @@ public class MorphiaPlugin extends AbstractSeedPlugin {
     private static final Logger LOGGER = LoggerFactory.getLogger(MorphiaPlugin.class);
     private final Collection<MorphiaDatastore> morphiaDatastores = new HashSet<>();
     private final Morphia morphia = new Morphia();
+    private MorphiaConfig config;
+    @Inject
+    private DatastoreFactory datastoreFactory;
 
     @Override
     public String name() {
@@ -51,6 +57,7 @@ public class MorphiaPlugin extends AbstractSeedPlugin {
     @Override
     public InitState initialize(InitContext initContext) {
         Application application = getApplication();
+        config = application.getConfiguration().get(MorphiaConfig.class);
 
         if (ValidationManager.get().getValidationLevel() != ValidationManager.ValidationLevel.NONE) {
             LOGGER.info("Validation is enabled on Morphia entities");
@@ -70,6 +77,22 @@ public class MorphiaPlugin extends AbstractSeedPlugin {
         }
 
         return InitState.INITIALIZED;
+    }
+
+    @Override
+    public void start(Context context) {
+        if (config.isEnsureCapsAtStartup() || config.isEnsureIndexesAtStartup()) {
+            morphiaDatastores.stream()
+                    .map(datastoreFactory::createDatastore)
+                    .forEach(morphiaDatastore -> {
+                        if (config.isEnsureIndexesAtStartup()) {
+                            morphiaDatastore.ensureIndexes();
+                        }
+                        if (config.isEnsureCapsAtStartup()) {
+                            morphiaDatastore.ensureCaps();
+                        }
+                    });
+        }
     }
 
     @Override
