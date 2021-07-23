@@ -322,3 +322,30 @@ about aliases).
 `com.mongodb.async.client.MongoDatabase` classes instead.
 {{% /callout %}}
 
+## Recommendations
+
+### Connection timeout
+
+The default configuration for the MongoDB driver is to make pooled connections stay forever alive, which may lead to
+SocketException ("Connection timed up") errors when connecting to remote/cloud MongoDB servers. This seems OK in a local
+network context.
+
+In a cloud context, remote DB servers (or intermediate network components) may kill the pooled connections after a period
+of time. The application won't detect it until it tries to use the connection. The application will recover from the
+error as the pool will be discarded and new connections will be open, but the ongoing operation that tried to use the
+broken connection will fail and get lost in the process.
+
+Using the connection option "maxIdleTimeMS" in the connection URI, or the client `options` yaml section will avoid this
+kind of problem. Example of a URI setting this option:
+
+```yaml
+mongoDb:
+  clients:
+    myClient:
+      uri: mongodb://username:password@host:port/dbName?maxIdleTimeMS=120000
+```
+
+{{% callout info %}}
+120 seconds is recommended in MongoDB documentation for the related `tcp_keepalive` problems, so it can safely be
+applied to this option. See http://docs.mongodb.org/manual/reference/connection-string/#maxIdleTimeMS
+{{% /callout %}}
