@@ -7,7 +7,6 @@
  */
 package org.seedstack.mongodb.internal;
 
-import com.google.inject.AbstractModule;
 import io.nuun.kernel.api.plugin.InitState;
 import io.nuun.kernel.api.plugin.context.InitContext;
 import org.seedstack.coffig.Coffig;
@@ -24,17 +23,7 @@ import java.util.Set;
 
 public class MongoDbPlugin extends AbstractSeedPlugin {
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoDbPlugin.class);
-
-    private static class SyncHolder {
-        private static final MongoDbManager INSTANCE = new SyncMongoDbManager();
-    }
-
-    private static class AsyncHolder {
-        private static final MongoDbManager INSTANCE = new AsyncMongoDbManager();
-    }
-
-    private boolean hasSyncClients = false;
-    private boolean hasAsyncClients = false;
+    private static final MongoDbManager MONGO_DB_MANAGER = new MongoDbManager();
 
     @Override
     public String name() {
@@ -42,7 +31,6 @@ public class MongoDbPlugin extends AbstractSeedPlugin {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public InitState initialize(InitContext initContext) {
         Coffig coffig = getConfiguration();
         MongoDbConfig mongoDbConfig = getConfiguration(MongoDbConfig.class);
@@ -57,13 +45,7 @@ public class MongoDbPlugin extends AbstractSeedPlugin {
             String clientName = clientEntry.getKey();
             MongoDbConfig.ClientConfig clientConfig = clientEntry.getValue();
 
-            if (clientConfig.isAsync()) {
-                AsyncHolder.INSTANCE.registerClient(clientName, clientConfig, coffig);
-                hasAsyncClients = true;
-            } else {
-                SyncHolder.INSTANCE.registerClient(clientName, clientConfig, coffig);
-                hasSyncClients = true;
-            }
+            MONGO_DB_MANAGER.registerClient(clientName, clientConfig, coffig);
 
             for (Map.Entry<String, MongoDbConfig.ClientConfig.DatabaseConfig> dbEntry : clientConfig.getDatabases().entrySet()) {
                 String dbName = dbEntry.getKey();
@@ -78,11 +60,7 @@ public class MongoDbPlugin extends AbstractSeedPlugin {
                     allDbNames.add(alias);
                 }
 
-                if (clientConfig.isAsync()) {
-                    AsyncHolder.INSTANCE.registerDatabase(clientName, dbName, alias);
-                } else {
-                    SyncHolder.INSTANCE.registerDatabase(clientName, dbName, alias);
-                }
+                MONGO_DB_MANAGER.registerDatabase(clientName, dbName, alias);
             }
         }
 
@@ -91,28 +69,11 @@ public class MongoDbPlugin extends AbstractSeedPlugin {
 
     @Override
     public Object nativeUnitModule() {
-        return new AbstractModule() {
-            @Override
-            protected void configure() {
-                if (hasSyncClients) {
-                    install(SyncHolder.INSTANCE.getModule());
-                }
-
-                if (hasAsyncClients) {
-                    install(AsyncHolder.INSTANCE.getModule());
-                }
-            }
-        };
+        return MONGO_DB_MANAGER.getModule();
     }
 
     @Override
     public void stop() {
-        if (hasSyncClients) {
-            SyncHolder.INSTANCE.shutdown();
-        }
-
-        if (hasAsyncClients) {
-            AsyncHolder.INSTANCE.shutdown();
-        }
+        MONGO_DB_MANAGER.shutdown();
     }
 }

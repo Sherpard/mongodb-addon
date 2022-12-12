@@ -30,21 +30,11 @@ public class MongoDbConfig {
     }
 
     public static class ClientConfig {
-        private boolean async = false;
         @SingleValue
         private String uri;
         private List<String> hosts = new ArrayList<>();
-        private List<String> credentials = new ArrayList<>();
+        private String credentials;
         private Map<String, DatabaseConfig> databases = new HashMap<>();
-
-        public boolean isAsync() {
-            return async;
-        }
-
-        public ClientConfig setAsync(boolean async) {
-            this.async = async;
-            return this;
-        }
 
         public boolean isConfiguredByUri() {
             return uri != null;
@@ -74,13 +64,12 @@ public class MongoDbConfig {
             return this;
         }
 
-        public List<String> getCredentials() {
-            return Collections.unmodifiableList(credentials);
+        public void setCredentials(String credentials) {
+            this.credentials = credentials;
         }
 
-        public ClientConfig addCredential(String credential) {
-            this.credentials.add(credential);
-            return this;
+        public String getCredentials() {
+            return credentials;
         }
 
         public Map<String, DatabaseConfig> getDatabases() {

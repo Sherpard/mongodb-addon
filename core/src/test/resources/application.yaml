@@ -13,16 +13,4 @@ mongoDb:
       options:
         connectionsPerHost: 50
       databases: db1
-    client2:
-      async: true
-      hosts: localhost
-      settings:
-        connectionPool:
-          maxSize: 50
-      databases: db2
-    client3:
-      async: true
-      hosts: localhost
-      databases:
-        db2: db3
 
