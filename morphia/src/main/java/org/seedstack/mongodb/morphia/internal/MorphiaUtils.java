@@ -84,13 +84,6 @@ public final class MorphiaUtils {
     }
 
     static void checkMongoClient(MongoDbConfig.ClientConfig clientConfig, Class<?> mappedClass, String clientName, String dbName) {
-        boolean async = clientConfig.isAsync();
-        if (async) {
-            throw SeedException.createNew(MorphiaErrorCode.ASYNC_CLIENT_NOT_SUPPORTED)
-                    .put("aggregate", mappedClass.getName())
-                    .put("clientName", clientName);
-        }
-
         boolean found = false;
         for (String nameToCheck : clientConfig.getDatabases().keySet()) {
             if (nameToCheck.equals(resolveDatabaseAlias(clientConfig, dbName))) {

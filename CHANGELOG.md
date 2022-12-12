@@ -1,3 +1,9 @@
+# Version 4.0.0 (2022-12-12)
+
+* [brk] Remove support for deprecated async driver
+* [brk] Require at least MongoDb driver support to 4.1
+* [chg] Upgrade Morphia to 1.6.1 (which makes it compatible with AWS DocumentDB).
+
 # Version 3.1.3 (2021-07-31)
 
 * [fix] Avoid calling `ensureIndexes()` and `ensureCaps()` for each datastore instantiation which adds a considerable
