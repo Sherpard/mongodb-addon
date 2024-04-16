@@ -9,7 +9,7 @@ package org.seedstack.mongodb;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import javax.inject.Inject;
 import javax.inject.Named;

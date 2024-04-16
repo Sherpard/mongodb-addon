@@ -14,7 +14,7 @@
     <parent>
         <groupId>org.seedstack.poms</groupId>
         <artifactId>parent-internal</artifactId>
-        <version>4.0.1</version>
+        <version>4.0.2</version>
     </parent>
 
     <groupId>org.seedstack.addons.mongodb</groupId>
@@ -23,9 +23,9 @@
     <packaging>pom</packaging>
 
     <properties>
-        <seed.version>3.12.0</seed.version>
-        <mongodb.version>4.1.1</mongodb.version>
-        <morphia.version>1.6.1</morphia.version>
+        <seed.version>3.14.0</seed.version>
+        <mongodb.version>5.0.1</mongodb.version>
+        <morphia.version>2.4.13</morphia.version>
         <business.version>4.4.0</business.version>
 
         <compatibility.skip>true</compatibility.skip>
