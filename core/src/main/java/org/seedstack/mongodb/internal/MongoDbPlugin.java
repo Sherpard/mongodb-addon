@@ -7,19 +7,21 @@
  */
 package org.seedstack.mongodb.internal;
 
-import io.nuun.kernel.api.plugin.InitState;
-import io.nuun.kernel.api.plugin.context.InitContext;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
 import org.seedstack.coffig.Coffig;
 import org.seedstack.mongodb.MongoDbConfig;
+import org.seedstack.mongodb.MongoDbConfig.ClientConfig;
 import org.seedstack.seed.SeedException;
 import org.seedstack.seed.core.internal.AbstractSeedPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import io.nuun.kernel.api.plugin.InitState;
+import io.nuun.kernel.api.plugin.context.InitContext;
 
 public class MongoDbPlugin extends AbstractSeedPlugin {
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoDbPlugin.class);
@@ -47,9 +49,9 @@ public class MongoDbPlugin extends AbstractSeedPlugin {
 
             MONGO_DB_MANAGER.registerClient(clientName, clientConfig, coffig);
 
-            for (Map.Entry<String, MongoDbConfig.ClientConfig.DatabaseConfig> dbEntry : clientConfig.getDatabases().entrySet()) {
+            for (Map.Entry<String, ClientConfig.DatabaseConfig> dbEntry : clientConfig.getDatabases().entrySet()) {
                 String dbName = dbEntry.getKey();
-                MongoDbConfig.ClientConfig.DatabaseConfig dbConfig = dbEntry.getValue();
+                ClientConfig.DatabaseConfig dbConfig = dbEntry.getValue();
                 String alias = Optional.ofNullable(dbConfig.getAlias()).orElse(dbName);
 
                 if (allDbNames.contains(alias)) {
