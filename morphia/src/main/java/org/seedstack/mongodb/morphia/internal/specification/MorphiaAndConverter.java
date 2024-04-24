@@ -8,19 +8,22 @@
 package org.seedstack.mongodb.morphia.internal.specification;
 
 import java.util.Arrays;
-import dev.morphia.query.Criteria;
-import dev.morphia.query.CriteriaContainer;
+
 import org.seedstack.business.specification.AndSpecification;
 import org.seedstack.business.spi.SpecificationConverter;
 import org.seedstack.business.spi.SpecificationTranslator;
 
-class MorphiaAndConverter implements SpecificationConverter<AndSpecification<?>, MorphiaTranslationContext<?>, CriteriaContainer> {
+import dev.morphia.query.filters.Filter;
+import dev.morphia.query.filters.Filters;
+
+class MorphiaAndConverter implements SpecificationConverter<AndSpecification<?>, MorphiaTranslationContext<?>, Filter> {
     @Override
-    public CriteriaContainer convert(AndSpecification<?> specification, MorphiaTranslationContext<?> context, SpecificationTranslator<MorphiaTranslationContext<?>, CriteriaContainer> translator) {
-        return context.getQuery().and(
-                Arrays.stream(specification.getSpecifications())
-                        .map(spec -> translator.translate(spec, new MorphiaTranslationContext<>(context)))
-                        .toArray(Criteria[]::new)
-        );
+    public Filter convert(AndSpecification<?> specification, MorphiaTranslationContext<?> context, SpecificationTranslator<MorphiaTranslationContext<?>, Filter> translator) {
+        Filter[] criterias = Arrays.stream(specification
+                .getSpecifications())
+                .map(spec -> translator.translate(spec, new MorphiaTranslationContext<>(context)))
+                .toArray(Filter[]::new);
+
+        return Filters.and(criterias);
     }
 }

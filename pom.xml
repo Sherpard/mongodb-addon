@@ -27,6 +27,9 @@
         <mongodb.version>5.0.1</mongodb.version>
         <morphia.version>2.4.13</morphia.version>
         <business.version>4.4.0</business.version>
+        
+         <maven.compiler.target>1.11</maven.compiler.target>
+          <maven.compiler.source>1.11</maven.compiler.source>
 
         <compatibility.skip>true</compatibility.skip>
 

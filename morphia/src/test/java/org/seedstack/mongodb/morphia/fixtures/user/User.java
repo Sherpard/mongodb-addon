@@ -8,12 +8,15 @@
 package org.seedstack.mongodb.morphia.fixtures.user;
 
 import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.EntityListeners;
 import dev.morphia.annotations.Id;
 import org.seedstack.business.domain.AggregateRoot;
+import org.seedstack.mongodb.morphia.internal.ValidatingEntityInterceptor;
 
 import javax.validation.constraints.NotNull;
 
 @Entity
+@EntityListeners(ValidatingEntityInterceptor.class)
 public class User implements AggregateRoot<Long> {
     public User() {
     }

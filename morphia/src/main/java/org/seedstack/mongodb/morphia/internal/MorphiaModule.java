@@ -11,27 +11,30 @@
 
 package org.seedstack.mongodb.morphia.internal;
 
+import java.util.Collection;
+
+import org.seedstack.mongodb.morphia.MorphiaDatastore;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.Scopes;
-import java.util.Collection;
-import java.util.Collection;
+
 import dev.morphia.Datastore;
-import dev.morphia.Morphia;
-import org.seedstack.mongodb.morphia.MorphiaDatastore;
+
 class MorphiaModule extends AbstractModule {
     private final Collection<MorphiaDatastore> morphiaDatastoresAnnotation;
-    private final Morphia morphia;
+    private final Collection<Class<?>> morphiaEntityListeners;
 
-    MorphiaModule(Collection<MorphiaDatastore> morphiaDatastoresAnnotation, Morphia morphia) {
+    MorphiaModule(Collection<MorphiaDatastore> morphiaDatastoresAnnotation,
+            Collection<Class<?>> morphiaEntityListeners) {
         super();
         this.morphiaDatastoresAnnotation = morphiaDatastoresAnnotation;
-        this.morphia = morphia;
+        this.morphiaEntityListeners = morphiaEntityListeners;
+
     }
 
     @Override
     protected void configure() {
-        bind(Morphia.class).toInstance(morphia);
         bind(DatastoreFactory.class);
         if (morphiaDatastoresAnnotation != null && !morphiaDatastoresAnnotation.isEmpty()) {
             for (MorphiaDatastore morphiaDatastore : morphiaDatastoresAnnotation) {
@@ -40,6 +43,7 @@ class MorphiaModule extends AbstractModule {
                 bind(Key.get(Datastore.class, morphiaDatastore)).toProvider(datastoreProvider).in(Scopes.SINGLETON);
             }
         }
-        morphia.getMapper().getInterceptors().forEach(this::requestInjection);
+
+        this.morphiaEntityListeners.forEach(this::requestInjection);
     }
 }

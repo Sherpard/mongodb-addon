@@ -7,15 +7,17 @@
  */
 package org.seedstack.mongodb.morphia.internal.specification;
 
-import dev.morphia.query.CriteriaContainer;
 import org.seedstack.business.specification.LessThanSpecification;
 import org.seedstack.business.spi.SpecificationConverter;
 import org.seedstack.business.spi.SpecificationTranslator;
 
+import dev.morphia.query.filters.Filter;
+import dev.morphia.query.filters.Filters;
 
-class MorphiaLessThanConverter<V extends Comparable<? super V>> implements SpecificationConverter<LessThanSpecification<V>, MorphiaTranslationContext<?>, CriteriaContainer> {
+class MorphiaLessThanConverter<V extends Comparable<? super V>>
+        implements SpecificationConverter<LessThanSpecification<V>, MorphiaTranslationContext<?>, Filter> {
     @Override
-    public CriteriaContainer convert(LessThanSpecification<V> specification, MorphiaTranslationContext<?> context, SpecificationTranslator<MorphiaTranslationContext<?>, CriteriaContainer> translator) {
-        return context.pickFieldEnd().lessThan(specification.getExpectedValue());
+    public Filter convert(LessThanSpecification<V> specification, MorphiaTranslationContext<?> context,SpecificationTranslator<MorphiaTranslationContext<?>, Filter> translator) {
+        return Filters.lt(context.getProperty(), specification.getExpectedValue());
     }
 }

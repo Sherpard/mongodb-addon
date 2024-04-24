@@ -11,13 +11,13 @@
 
 package org.seedstack.mongodb.morphia.fixtures.product;
 
-import dev.morphia.annotations.Embedded;
-import dev.morphia.annotations.Entity;
-import dev.morphia.annotations.Id;
 import org.seedstack.business.domain.BaseEntity;
 import org.seedstack.business.domain.Identity;
 import org.seedstack.business.util.SequenceGenerator;
 import org.seedstack.business.util.inmemory.InMemory;
+
+import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Id;
 
 @Entity
 public class Picture extends BaseEntity<Long> {
@@ -25,8 +25,7 @@ public class Picture extends BaseEntity<Long> {
     @Id
     @Identity(generator = SequenceGenerator.class)
     @InMemory
-    private Long id;
-    @Embedded
+    private Long id; 
     private PictureURL url;
     private Long productId;
 

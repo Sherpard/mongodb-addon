@@ -7,30 +7,30 @@
  */
 package org.seedstack.mongodb.morphia.internal;
 
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
-import com.mongodb.MongoClient;
-import dev.morphia.Datastore;
-import dev.morphia.Morphia;
-import org.seedstack.mongodb.morphia.MorphiaDatastore;
-import org.seedstack.seed.Application;
+import static org.seedstack.mongodb.morphia.internal.MorphiaUtils.createDatastoreAnnotation;
+import static org.seedstack.mongodb.morphia.internal.MorphiaUtils.getMongoClientConfig;
 
 import javax.inject.Inject;
 
-import static org.seedstack.mongodb.morphia.internal.MorphiaUtils.createDatastoreAnnotation;
-import static org.seedstack.mongodb.morphia.internal.MorphiaUtils.getMongoClientConfig;
+import org.seedstack.mongodb.morphia.MorphiaDatastore;
+import org.seedstack.seed.Application;
+
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
+import com.mongodb.client.MongoClient;
+
+import dev.morphia.Datastore;
+import dev.morphia.Morphia;
 
 public class DatastoreFactory {
     private final Application application;
     private final Injector injector;
-    private final Morphia morphia;
 
     @Inject
-    DatastoreFactory(Application application, Injector injector, Morphia morphia) {
+    DatastoreFactory(Application application, Injector injector) {
         this.application = application;
         this.injector = injector;
-        this.morphia = morphia;
     }
 
     public Datastore createDatastore(Class<?> morphiaClass) {
@@ -42,12 +42,11 @@ public class DatastoreFactory {
     }
 
     public Datastore createDatastore(String clientName, String dbName) {
-        return morphia.createDatastore(
-                injector.getInstance(Key.get(MongoClient.class, Names.named(clientName))),
-                MorphiaUtils.resolveDatabaseAlias(
-                        getMongoClientConfig(application, clientName),
-                        dbName
-                )
-        );
+        MongoClient client = injector.getInstance(Key.get(MongoClient.class, Names.named(clientName)));
+        String dbAlias = MorphiaUtils.resolveDatabaseAlias(getMongoClientConfig(application, clientName), dbName);
+
+        Datastore dataStore = Morphia.createDatastore(client, dbAlias);
+        
+        return dataStore;
     }
 }

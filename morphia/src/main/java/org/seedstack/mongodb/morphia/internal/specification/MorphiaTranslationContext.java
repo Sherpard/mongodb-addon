@@ -12,6 +12,7 @@ import static com.google.common.base.Preconditions.checkState;
 import dev.morphia.query.CriteriaContainer;
 import dev.morphia.query.FieldEnd;
 import dev.morphia.query.Query;
+import dev.morphia.query.filters.Filter;
 
 public class MorphiaTranslationContext<T> {
     private final Query<T> query;
@@ -28,9 +29,9 @@ public class MorphiaTranslationContext<T> {
         this.not = source.not;
     }
 
-    public FieldEnd<? extends CriteriaContainer> pickFieldEnd() {
-        checkState(this.property != null, "No field has been set");
+    public FieldEnd<?> pickFieldEnd() {
         FieldEnd<? extends CriteriaContainer> result;
+
         if (not) {
             result = query.criteria(property).not();
         } else {
@@ -41,16 +42,22 @@ public class MorphiaTranslationContext<T> {
         return result;
     }
 
+    public String getProperty() {
+        assertPropertyValue();
+        return property;
+    }
+
     public void setProperty(String property) {
         checkState(this.property == null, "A field is already set");
         this.property = property;
     }
 
-    public void not() {
-        not = !not;
-    }
-
     public Query<T> getQuery() {
         return query;
+    }
+
+    private void assertPropertyValue() {
+        checkState(this.property != null, "No field has been set");
+
     }
 }

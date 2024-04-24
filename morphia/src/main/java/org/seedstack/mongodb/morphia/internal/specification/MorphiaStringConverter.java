@@ -7,26 +7,28 @@
  */
 package org.seedstack.mongodb.morphia.internal.specification;
 
-import dev.morphia.query.CriteriaContainer;
+import java.util.regex.Pattern;
+
 import org.seedstack.business.specification.StringSpecification;
 import org.seedstack.business.spi.SpecificationConverter;
 import org.seedstack.business.spi.SpecificationTranslator;
 
-import java.util.regex.Pattern;
+import dev.morphia.query.filters.Filter;
+import dev.morphia.query.filters.Filters;
 
-abstract class MorphiaStringConverter<S extends StringSpecification> implements SpecificationConverter<S, MorphiaTranslationContext<?>, CriteriaContainer> {
+abstract class MorphiaStringConverter<S extends StringSpecification>
+        implements SpecificationConverter<S, MorphiaTranslationContext<?>, Filter> {
     @Override
-    public CriteriaContainer convert(S specification, MorphiaTranslationContext<?> context, SpecificationTranslator<MorphiaTranslationContext<?>, CriteriaContainer> translator) {
+    public Filter convert(S specification, MorphiaTranslationContext<?> context,
+            SpecificationTranslator<MorphiaTranslationContext<?>, Filter> translator) {
         if (specification.getExpectedString() == null) {
-            return context.pickFieldEnd().doesNotExist();
+            return Filters.exists(context.getProperty()).not();
         } else {
             StringSpecification.Options options = specification.getOptions();
             if (hasNoOption(options) && !isRegex()) {
-                // We avoid using equal() because Morphia optimizes it without operator ("someAttr": "someVal")
-                // Thus generating an invalid query when trying to negate it ("$not": "someVal")
-                return context.pickFieldEnd().not().notEqual(specification.getExpectedString());
+                return Filters.eq(context.getProperty(), specification.getExpectedString());
             } else {
-                return context.pickFieldEnd().equal(buildRegex(options, specification.getExpectedString()));
+                return Filters.regex(context.getProperty(), buildRegex(options, specification.getExpectedString()));
             }
 
         }
@@ -47,7 +49,8 @@ abstract class MorphiaStringConverter<S extends StringSpecification> implements 
     }
 
     private boolean hasNoOption(StringSpecification.Options options) {
-        return !options.isLeadTrimmed() && !options.isTailTrimmed() && !options.isTrimmed() && !options.isIgnoringCase();
+        return !options.isLeadTrimmed() && !options.isTailTrimmed() && !options.isTrimmed()
+                && !options.isIgnoringCase();
     }
 
     abstract String buildRegexMatchingPart(String value);

@@ -7,16 +7,20 @@
  */
 package org.seedstack.mongodb.morphia.internal.specification;
 
-import dev.morphia.query.CriteriaContainer;
 import org.seedstack.business.specification.TrueSpecification;
 import org.seedstack.business.spi.SpecificationConverter;
 import org.seedstack.business.spi.SpecificationTranslator;
 import org.seedstack.mongodb.morphia.BaseMorphiaRepository;
 
-class MorphiaTrueConverter implements SpecificationConverter<TrueSpecification<?>, MorphiaTranslationContext<?>, CriteriaContainer> {
+import dev.morphia.query.filters.Filter;
+import dev.morphia.query.filters.Filters;
+
+class MorphiaTrueConverter
+        implements SpecificationConverter<TrueSpecification<?>, MorphiaTranslationContext<?>, Filter> {
     @Override
-    public CriteriaContainer convert(TrueSpecification<?> specification, MorphiaTranslationContext<?> context, SpecificationTranslator<MorphiaTranslationContext<?>, CriteriaContainer> translator) {
+    public Filter convert(TrueSpecification<?> specification, MorphiaTranslationContext<?> context,
+            SpecificationTranslator<MorphiaTranslationContext<?>, Filter> translator) {
         // Always true
-        return context.getQuery().criteria(BaseMorphiaRepository.ID_KEY).not().doesNotExist();
+        return Filters.exists(BaseMorphiaRepository.ID_KEY);
     }
 }

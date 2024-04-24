@@ -15,7 +15,8 @@ import java.util.regex.Pattern;
 class MorphiaStringEqualConverter extends MorphiaStringConverter<StringEqualSpecification> {
     @Override
     String buildRegexMatchingPart(String value) {
-        return Pattern.quote(value);
+        // return Pattern.quote(value);
+        return value;
     }
 
     @Override

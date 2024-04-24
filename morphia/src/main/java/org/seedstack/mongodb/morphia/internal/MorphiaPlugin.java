@@ -7,12 +7,12 @@
  */
 package org.seedstack.mongodb.morphia.internal;
 
-import com.google.common.collect.Lists;
-import dev.morphia.Morphia;
-import io.nuun.kernel.api.plugin.InitState;
-import io.nuun.kernel.api.plugin.context.Context;
-import io.nuun.kernel.api.plugin.context.InitContext;
-import io.nuun.kernel.api.plugin.request.ClasspathScanRequest;
+import java.util.Collection;
+import java.util.HashSet;
+
+import javax.inject.Inject;
+
+import org.seedstack.mongodb.internal.MongoDbPlugin;
 import org.seedstack.mongodb.morphia.MorphiaConfig;
 import org.seedstack.mongodb.morphia.MorphiaDatastore;
 import org.seedstack.seed.Application;
@@ -22,9 +22,12 @@ import org.seedstack.seed.core.internal.validation.ValidationPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import java.util.Collection;
-import java.util.HashSet;
+import com.google.common.collect.Lists;
+
+import io.nuun.kernel.api.plugin.InitState;
+import io.nuun.kernel.api.plugin.context.Context;
+import io.nuun.kernel.api.plugin.context.InitContext;
+import io.nuun.kernel.api.plugin.request.ClasspathScanRequest;
 
 /**
  * This plugin manages the MongoDb Morphia object/document mapping library.
@@ -32,7 +35,7 @@ import java.util.HashSet;
 public class MorphiaPlugin extends AbstractSeedPlugin {
     private static final Logger LOGGER = LoggerFactory.getLogger(MorphiaPlugin.class);
     private final Collection<MorphiaDatastore> morphiaDatastores = new HashSet<>();
-    private final Morphia morphia = new Morphia();
+    private final Collection<Class<?>> morphiaListeners = new HashSet<>();
     private MorphiaConfig config;
     @Inject
     private DatastoreFactory datastoreFactory;
@@ -44,13 +47,14 @@ public class MorphiaPlugin extends AbstractSeedPlugin {
 
     @Override
     public Collection<Class<?>> dependencies() {
-        return Lists.newArrayList(ValidationPlugin.class);
+        return Lists.newArrayList(ValidationPlugin.class, MongoDbPlugin.class);
     }
 
     @Override
     public Collection<ClasspathScanRequest> classpathScanRequests() {
         return classpathScanRequestBuilder()
                 .predicate(MorphiaPredicates.PERSISTED_CLASSES)
+                .predicate(MorphiaPredicates.ENTITY_LISTENERS)
                 .build();
     }
 
@@ -61,19 +65,34 @@ public class MorphiaPlugin extends AbstractSeedPlugin {
 
         if (ValidationManager.get().getValidationLevel() != ValidationManager.ValidationLevel.NONE) {
             LOGGER.info("Validation is enabled on Morphia entities");
-            morphia.getMapper().addInterceptor(new ValidatingEntityInterceptor());
+        } else {
+            LOGGER.info("Validation is disabled on Morphia entities");
         }
 
-        Collection<Class<?>> morphiaScannedClasses = initContext.scannedTypesByPredicate()
+        Collection<Class<?>> morphiaPersistedClasses = initContext.scannedTypesByPredicate()
                 .get(MorphiaPredicates.PERSISTED_CLASSES);
-        if (morphiaScannedClasses != null && !morphiaScannedClasses.isEmpty()) {
-            morphia.map(new HashSet<>(morphiaScannedClasses));
-            for (Class<?> morphiaClass : morphiaScannedClasses) {
+
+        if (morphiaPersistedClasses != null && !morphiaPersistedClasses.isEmpty()) {
+            LOGGER.info("Creating datastore for {} persisted classes ", morphiaPersistedClasses.size());
+            for (Class<?> morphiaClass : morphiaPersistedClasses) {
                 MorphiaDatastore morphiaDatastore = MorphiaUtils.createDatastoreAnnotation(application, morphiaClass);
                 if (!morphiaDatastores.contains(morphiaDatastore)) {
+                    
                     morphiaDatastores.add(morphiaDatastore);
                 }
             }
+        } else {
+            LOGGER.info("No persisted classes found");
+        }
+
+        Collection<Class<?>> morphiaEntityListeners = initContext.scannedTypesByPredicate()
+                .get(MorphiaPredicates.ENTITY_LISTENERS);
+
+        if (morphiaEntityListeners != null && !morphiaEntityListeners.isEmpty()) {
+            LOGGER.info("Found {} entity listeners", morphiaEntityListeners.size());
+            morphiaListeners.addAll(morphiaEntityListeners);
+        } else {
+            LOGGER.info("No entity listeners found");
         }
 
         return InitState.INITIALIZED;
@@ -97,6 +116,6 @@ public class MorphiaPlugin extends AbstractSeedPlugin {
 
     @Override
     public Object nativeUnitModule() {
-        return new MorphiaModule(morphiaDatastores, morphia);
+        return new MorphiaModule(morphiaDatastores, morphiaListeners);
     }
 }

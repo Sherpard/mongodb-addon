@@ -7,24 +7,44 @@
  */
 package org.seedstack.mongodb.morphia.internal;
 
-import com.mongodb.DBObject;
+import java.lang.annotation.Annotation;
 import java.util.Set;
+
 import javax.inject.Inject;
 import javax.validation.ConstraintViolation;
 import javax.validation.ValidatorFactory;
-import org.seedstack.seed.core.internal.validation.VerboseConstraintViolationException;
-import dev.morphia.AbstractEntityInterceptor;
-import dev.morphia.mapping.Mapper;
 
-class ValidatingEntityInterceptor extends AbstractEntityInterceptor {
+import org.bson.Document;
+import org.seedstack.seed.core.internal.validation.VerboseConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import dev.morphia.Datastore;
+import dev.morphia.EntityListener;
+import dev.morphia.annotations.EntityListeners;
+import dev.morphia.annotations.PrePersist;
+
+public class ValidatingEntityInterceptor implements EntityListener<Object> {
+    
+    private static final Logger LOGGER = LoggerFactory.getLogger(ValidatingEntityInterceptor.class);
     @Inject
     private ValidatorFactory validatorFactory;
 
     @Override
-    public void prePersist(final Object ent, final DBObject dbObj, final Mapper mapper) {
-        Set<ConstraintViolation<Object>> result = validatorFactory.getValidator().validate(ent);
+    @PrePersist
+    public void prePersist(Object entity, Document document, Datastore datastore) {
+        Set<ConstraintViolation<Object>> result = validatorFactory.getValidator().validate(entity);
         if (!result.isEmpty()) {
             throw new VerboseConstraintViolationException(result);
         }
+
+    }
+
+    @Override
+    public boolean hasAnnotation(Class<? extends Annotation> type) {
+        LOGGER.info(type.toString());
+        // System.err.println(type.toString());
+        // TODO Auto-generated method stub
+        return true;
     }
 }

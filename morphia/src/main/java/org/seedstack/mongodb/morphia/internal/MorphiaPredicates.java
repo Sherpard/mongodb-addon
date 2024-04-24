@@ -7,20 +7,27 @@
  */
 package org.seedstack.mongodb.morphia.internal;
 
-import dev.morphia.annotations.Embedded;
-import dev.morphia.annotations.Entity;
+import static org.seedstack.shed.reflect.AnnotationPredicates.elementAnnotatedWith;
+import static org.seedstack.shed.reflect.ClassPredicates.classImplements;
+import static org.seedstack.shed.reflect.ClassPredicates.classIsInterface;
+import static org.seedstack.shed.reflect.ClassPredicates.classModifierIs;
 
 import java.lang.reflect.Modifier;
 import java.util.function.Predicate;
 
-import static org.seedstack.shed.reflect.AnnotationPredicates.elementAnnotatedWith;
-import static org.seedstack.shed.reflect.ClassPredicates.classIsInterface;
-import static org.seedstack.shed.reflect.ClassPredicates.classModifierIs;
+import dev.morphia.EntityListener;
+import dev.morphia.annotations.Embedded;
+import dev.morphia.annotations.Entity;
 
 class MorphiaPredicates {
     static Predicate<Class<?>> PERSISTED_CLASSES = classIsInterface().negate()
             .and(classModifierIs(Modifier.ABSTRACT).negate())
             .and(elementAnnotatedWith(Entity.class, false)
-                    .or(elementAnnotatedWith(Embedded.class, false))
+                    .or(elementAnnotatedWith(Embedded.class, false)));
+
+    static Predicate<Class<?>> ENTITY_LISTENERS = classIsInterface().negate()
+            .and(classModifierIs(Modifier.ABSTRACT).negate())
+            .and(classImplements(EntityListener.class)
+            // .or(elementAnnotatedWith(EntityListeners.class, true))
             );
 }

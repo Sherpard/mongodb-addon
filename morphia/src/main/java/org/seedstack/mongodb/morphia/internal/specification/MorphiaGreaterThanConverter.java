@@ -7,15 +7,18 @@
  */
 package org.seedstack.mongodb.morphia.internal.specification;
 
-import dev.morphia.query.CriteriaContainer;
 import org.seedstack.business.specification.GreaterThanSpecification;
 import org.seedstack.business.spi.SpecificationConverter;
 import org.seedstack.business.spi.SpecificationTranslator;
 
+import dev.morphia.query.filters.Filter;
+import dev.morphia.query.filters.Filters;
 
-class MorphiaGreaterThanConverter<V extends Comparable<? super V>> implements SpecificationConverter<GreaterThanSpecification<V>, MorphiaTranslationContext<?>, CriteriaContainer> {
+class MorphiaGreaterThanConverter<V extends Comparable<? super V>>
+        implements SpecificationConverter<GreaterThanSpecification<V>, MorphiaTranslationContext<?>, Filter> {
     @Override
-    public CriteriaContainer convert(GreaterThanSpecification<V> specification, MorphiaTranslationContext<?> context, SpecificationTranslator<MorphiaTranslationContext<?>, CriteriaContainer> translator) {
-        return context.pickFieldEnd().greaterThan(specification.getExpectedValue());
+    public Filter convert(GreaterThanSpecification<V> specification, MorphiaTranslationContext<?> context,
+            SpecificationTranslator<MorphiaTranslationContext<?>, Filter> translator) {
+        return Filters.gt(context.getProperty(), specification.getExpectedValue());
     }
 }
