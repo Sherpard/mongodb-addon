@@ -11,12 +11,10 @@ import org.seedstack.business.specification.StringEqualSpecification;
 
 import java.util.regex.Pattern;
 
-
 class MorphiaStringEqualConverter extends MorphiaStringConverter<StringEqualSpecification> {
     @Override
     String buildRegexMatchingPart(String value) {
-        // return Pattern.quote(value);
-        return value;
+        return Pattern.quote(value);
     }
 
     @Override
