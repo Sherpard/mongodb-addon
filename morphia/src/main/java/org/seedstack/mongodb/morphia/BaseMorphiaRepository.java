@@ -167,8 +167,8 @@ public abstract class BaseMorphiaRepository<A extends AggregateRoot<ID>, ID> ext
     @Override
     public void clear() {
         MongoCollection<A> collection = datastore.getCollection(getAggregateRootClass());
-        collection.drop();
         collection.dropIndexes();
+        collection.drop();
     }
 
     private Query<A> buildQuery(Specification<A> specification) {
