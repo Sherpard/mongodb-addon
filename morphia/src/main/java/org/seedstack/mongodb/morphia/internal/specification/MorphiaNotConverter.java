@@ -19,10 +19,7 @@ class MorphiaNotConverter
     @Override
     public Filter convert(NotSpecification<?> specification, MorphiaTranslationContext<?> context,
             SpecificationTranslator<MorphiaTranslationContext<?>, Filter> translator) {
-//TODO: FIX
-        
-        translator.translate(specification, context).not();
-        
+
         return translator.translate(specification.getSpecification(), context).not();
     }
 }

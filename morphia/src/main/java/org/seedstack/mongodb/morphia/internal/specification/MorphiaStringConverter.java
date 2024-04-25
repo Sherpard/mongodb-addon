@@ -15,6 +15,7 @@ import org.seedstack.business.spi.SpecificationTranslator;
 
 import dev.morphia.query.filters.Filter;
 import dev.morphia.query.filters.Filters;
+import dev.morphia.query.filters.RegexFilter;
 
 abstract class MorphiaStringConverter<S extends StringSpecification>
         implements SpecificationConverter<S, MorphiaTranslationContext<?>, Filter> {
@@ -28,7 +29,13 @@ abstract class MorphiaStringConverter<S extends StringSpecification>
             if (hasNoOption(options) && !isRegex()) {
                 return Filters.eq(context.getProperty(), specification.getExpectedString());
             } else {
-                return Filters.regex(context.getProperty(), buildRegex(options, specification.getExpectedString()));
+
+                RegexFilter result = Filters.regex(context.getProperty(),
+                        buildRegex(options, specification.getExpectedString()));
+                if (options.isIgnoringCase()) {
+                    result.caseInsensitive();
+                }
+                return result;
             }
 
         }
@@ -45,7 +52,7 @@ abstract class MorphiaStringConverter<S extends StringSpecification>
             sb.append("\\s*");
         }
         sb.append("$");
-        return Pattern.compile(sb.toString(), options.isIgnoringCase() ? Pattern.CASE_INSENSITIVE : 0);
+        return Pattern.compile(sb.toString());
     }
 
     private boolean hasNoOption(StringSpecification.Options options) {
