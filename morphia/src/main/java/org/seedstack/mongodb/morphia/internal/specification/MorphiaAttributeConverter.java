@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2021, The SeedStack authors <http://seedstack.org>
+ * Copyright © 2013-2024, The SeedStack authors <http://seedstack.org>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -7,14 +7,17 @@
  */
 package org.seedstack.mongodb.morphia.internal.specification;
 
-import dev.morphia.query.CriteriaContainer;
 import org.seedstack.business.specification.AttributeSpecification;
 import org.seedstack.business.spi.SpecificationConverter;
 import org.seedstack.business.spi.SpecificationTranslator;
 
-class MorphiaAttributeConverter implements SpecificationConverter<AttributeSpecification<?, ?>, MorphiaTranslationContext<?>, CriteriaContainer> {
+import dev.morphia.query.filters.Filter;
+
+class MorphiaAttributeConverter
+        implements SpecificationConverter<AttributeSpecification<?, ?>, MorphiaTranslationContext<?>, Filter> {
     @Override
-    public CriteriaContainer convert(AttributeSpecification<?, ?> specification, MorphiaTranslationContext<?> context, SpecificationTranslator<MorphiaTranslationContext<?>, CriteriaContainer> translator) {
+    public Filter convert(AttributeSpecification<?, ?> specification, MorphiaTranslationContext<?> context,
+            SpecificationTranslator<MorphiaTranslationContext<?>, Filter> translator) {
         context.setProperty(specification.getPath());
         return translator.translate(specification.getValueSpecification(), context);
     }

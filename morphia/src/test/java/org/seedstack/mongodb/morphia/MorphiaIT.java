@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2021, The SeedStack authors <http://seedstack.org>
+ * Copyright © 2013-2024, The SeedStack authors <http://seedstack.org>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,18 +10,11 @@ package org.seedstack.mongodb.morphia;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.ProvisionException;
-import com.google.inject.TypeLiteral;
-import com.google.inject.util.Types;
 import javax.validation.ConstraintViolationException;
+
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runner.RunWith;
-import dev.morphia.Datastore;
-import dev.morphia.Key;
 import org.seedstack.business.domain.Repository;
 import org.seedstack.mongodb.morphia.fixtures.dummyobject.Dummy1;
 import org.seedstack.mongodb.morphia.fixtures.dummyobject.Dummy2;
@@ -34,6 +27,14 @@ import org.seedstack.mongodb.morphia.fixtures.user.User;
 import org.seedstack.mongodb.morphia.internal.MorphiaErrorCode;
 import org.seedstack.seed.SeedException;
 import org.seedstack.seed.testing.junit4.SeedITRunner;
+
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.ProvisionException;
+import com.google.inject.TypeLiteral;
+import com.google.inject.util.Types;
+
+import dev.morphia.Datastore;
 
 @RunWith(SeedITRunner.class)
 public class MorphiaIT {
@@ -49,7 +50,7 @@ public class MorphiaIT {
                 "Gerard",
                 "menvuça",
                 new Address("France", "78300", "Poissy", "avenue de l'europe", 1));
-        Key<User> keyUser = datastore.save(user);
+        User keyUser = datastore.save(user);
         Assertions.assertThat(keyUser).isNotNull();
     }
 

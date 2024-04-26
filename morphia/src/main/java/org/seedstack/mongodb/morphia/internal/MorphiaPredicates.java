@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2021, The SeedStack authors <http://seedstack.org>
+ * Copyright © 2013-2024, The SeedStack authors <http://seedstack.org>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -7,20 +7,25 @@
  */
 package org.seedstack.mongodb.morphia.internal;
 
-import dev.morphia.annotations.Embedded;
-import dev.morphia.annotations.Entity;
+import static org.seedstack.shed.reflect.AnnotationPredicates.elementAnnotatedWith;
+import static org.seedstack.shed.reflect.ClassPredicates.classImplements;
+import static org.seedstack.shed.reflect.ClassPredicates.classIsInterface;
+import static org.seedstack.shed.reflect.ClassPredicates.classModifierIs;
 
 import java.lang.reflect.Modifier;
 import java.util.function.Predicate;
 
-import static org.seedstack.shed.reflect.AnnotationPredicates.elementAnnotatedWith;
-import static org.seedstack.shed.reflect.ClassPredicates.classIsInterface;
-import static org.seedstack.shed.reflect.ClassPredicates.classModifierIs;
+import dev.morphia.EntityListener;
+import dev.morphia.annotations.Embedded;
+import dev.morphia.annotations.Entity;
 
 class MorphiaPredicates {
     static Predicate<Class<?>> PERSISTED_CLASSES = classIsInterface().negate()
             .and(classModifierIs(Modifier.ABSTRACT).negate())
             .and(elementAnnotatedWith(Entity.class, false)
-                    .or(elementAnnotatedWith(Embedded.class, false))
-            );
+                    .or(elementAnnotatedWith(Embedded.class, false)));
+
+    static Predicate<Class<?>> ENTITY_LISTENERS = classIsInterface().negate()
+            .and(classModifierIs(Modifier.ABSTRACT).negate())
+            .and(classImplements(EntityListener.class));
 }

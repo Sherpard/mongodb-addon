@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2021, The SeedStack authors <http://seedstack.org>
+ * Copyright © 2013-2024, The SeedStack authors <http://seedstack.org>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -7,21 +7,24 @@
  */
 package org.seedstack.mongodb.morphia.internal.specification;
 
-import dev.morphia.query.CriteriaContainer;
 import org.seedstack.business.specification.EqualSpecification;
 import org.seedstack.business.spi.SpecificationConverter;
 import org.seedstack.business.spi.SpecificationTranslator;
 
+import dev.morphia.query.filters.Filter;
+import dev.morphia.query.filters.Filters;
 
-class MorphiaEqualConverter implements SpecificationConverter<EqualSpecification<?>, MorphiaTranslationContext<?>, CriteriaContainer> {
+class MorphiaEqualConverter
+        implements SpecificationConverter<EqualSpecification<?>, MorphiaTranslationContext<?>, Filter> {
+
     @Override
-    public CriteriaContainer convert(EqualSpecification<?> specification, MorphiaTranslationContext<?> context, SpecificationTranslator<MorphiaTranslationContext<?>, CriteriaContainer> translator) {
+    public Filter convert(EqualSpecification<?> specification,
+            MorphiaTranslationContext<?> context,
+            SpecificationTranslator<MorphiaTranslationContext<?>, Filter> translator) {
         if (specification.getExpectedValue() == null) {
-            return context.pickFieldEnd().doesNotExist();
+            return Filters.exists(context.getProperty()).not();
         } else {
-            // We avoid using equal() because Morphia optimizes it without operator ("someAttr": "someVal")
-            // Thus generating an invalid query when trying to negate it ("$not": "someVal")
-            return context.pickFieldEnd().not().notEqual(specification.getExpectedValue());
+            return Filters.eq(context.getProperty(), specification.getExpectedValue());
         }
     }
 }

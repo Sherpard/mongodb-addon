@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2021, The SeedStack authors <http://seedstack.org>
+ * Copyright © 2013-2024, The SeedStack authors <http://seedstack.org>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -7,11 +7,13 @@
  */
 package org.seedstack.mongodb.morphia.fixtures.product;
 
-import dev.morphia.annotations.Embedded;
 import org.seedstack.business.domain.BaseValueObject;
 
-@Embedded
+import dev.morphia.annotations.Entity;
+
+@Entity
 public class PictureURL extends BaseValueObject {
+    private static final long serialVersionUID = -1476003771826714191L;
     private String url;
     private boolean secured = false;
 

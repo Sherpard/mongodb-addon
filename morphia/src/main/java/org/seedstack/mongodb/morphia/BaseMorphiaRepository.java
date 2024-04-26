@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2021, The SeedStack authors <http://seedstack.org>
+ * Copyright © 2013-2024, The SeedStack authors <http://seedstack.org>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,22 +10,15 @@ package org.seedstack.mongodb.morphia;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Spliterators.spliteratorUnknownSize;
 
-import com.mongodb.DBCollection;
-import dev.morphia.Datastore;
-import dev.morphia.query.CountOptions;
-import dev.morphia.query.CriteriaContainer;
-import dev.morphia.query.FindOptions;
-import dev.morphia.query.Query;
-import dev.morphia.query.Sort;
-import dev.morphia.query.internal.MorphiaCursor;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
 import javax.inject.Inject;
+
 import org.seedstack.business.domain.AggregateExistsException;
 import org.seedstack.business.domain.AggregateNotFoundException;
 import org.seedstack.business.domain.AggregateRoot;
@@ -37,18 +30,39 @@ import org.seedstack.business.specification.Specification;
 import org.seedstack.business.spi.SpecificationTranslator;
 import org.seedstack.mongodb.morphia.internal.DatastoreFactory;
 import org.seedstack.mongodb.morphia.internal.specification.MorphiaTranslationContext;
+import org.seedstack.seed.Logging;
+import org.slf4j.Logger;
+
+import com.mongodb.client.MongoCollection;
+
+import dev.morphia.Datastore;
+import dev.morphia.DeleteOptions;
+import dev.morphia.query.CountOptions;
+import dev.morphia.query.FindOptions;
+import dev.morphia.query.MorphiaCursor;
+import dev.morphia.query.Query;
+import dev.morphia.query.Sort;
+import dev.morphia.query.filters.Filter;
+import dev.morphia.query.filters.Filters;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
- * This class can serve as a base class for Morphia repositories. It provides methods for common CRUD operations as
- * well as access to the data store through the {@link #getDatastore()} ()} protected method.
+ * This class can serve as a base class for Morphia repositories. It provides methods for common
+ * CRUD operations as well as access to the data store through the {@link #getDatastore()} ()}
+ * protected method.
  *
- * @param <A>  Aggregate root class.
- * @param <ID> Identifier class.
+ * @param <A>
+ *            Aggregate root class.
+ * @param <ID>
+ *            Identifier class.
  */
 public abstract class BaseMorphiaRepository<A extends AggregateRoot<ID>, ID> extends BaseRepository<A, ID> {
     public static final String ID_KEY = "_id";
     private Datastore datastore;
-    private SpecificationTranslator<MorphiaTranslationContext, CriteriaContainer> specificationTranslator;
+    private SpecificationTranslator<MorphiaTranslationContext, Filter> specificationTranslator;
+
+    @Logging
+    private Logger logger;
 
     public BaseMorphiaRepository() {
 
@@ -61,7 +75,7 @@ public abstract class BaseMorphiaRepository<A extends AggregateRoot<ID>, ID> ext
     @Inject
     @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD", justification = "Called by Guice")
     private void init(DatastoreFactory datastoreFactory,
-            SpecificationTranslator<MorphiaTranslationContext, CriteriaContainer> specificationTranslator) {
+            SpecificationTranslator<MorphiaTranslationContext, Filter> specificationTranslator) {
         this.datastore = datastoreFactory.createDatastore(getAggregateRootClass());
         this.specificationTranslator = specificationTranslator;
     }
@@ -82,14 +96,14 @@ public abstract class BaseMorphiaRepository<A extends AggregateRoot<ID>, ID> ext
 
     @Override
     public Stream<A> get(Specification<A> specification, Option... options) {
-        final MorphiaCursor<A> cursor = buildQuery(specification, options).find(buildFindOptions(options));
+        MorphiaCursor<A> cursor = buildQuery(specification).iterator(buildFindOptions(options));
         return StreamSupport.stream(spliteratorUnknownSize(cursor, Spliterator.ORDERED), false)
                 .onClose(cursor::close);
     }
 
     @Override
     public Optional<A> get(ID id) {
-        return Optional.ofNullable(datastore.find(getAggregateRootClass()).filter(ID_KEY, id).first());
+        return Optional.ofNullable(datastore.find(getAggregateRootClass()).filter(Filters.eq(ID_KEY, id)).first());
     }
 
     @Override
@@ -99,7 +113,7 @@ public abstract class BaseMorphiaRepository<A extends AggregateRoot<ID>, ID> ext
 
     @Override
     public boolean contains(ID id) {
-        return datastore.find(getAggregateRootClass()).filter(ID_KEY, id).count(new CountOptions().limit(1)) > 0;
+        return this.get(id).isPresent();
     }
 
     @Override
@@ -109,22 +123,22 @@ public abstract class BaseMorphiaRepository<A extends AggregateRoot<ID>, ID> ext
 
     @Override
     public long size() {
-        return datastore.createQuery(getAggregateRootClass()).count();
+        return datastore.find(getAggregateRootClass()).count();
     }
 
     @Override
     public long remove(Specification<A> specification) throws AggregateNotFoundException {
-        return datastore.delete(buildQuery(specification)).getN();
+        return buildQuery(specification).delete(new DeleteOptions().multi(true)).getDeletedCount();
     }
 
     @Override
     public void remove(ID id) throws AggregateNotFoundException {
-        checkExactlyOneAggregateRemoved(
-                datastore.delete(datastore.find(getAggregateRootClass()).filter(ID_KEY, id)).getN(),
-                id);
+        long deletedCount = datastore.find(getAggregateRootClass()).filter(Filters.eq(ID_KEY, id)).delete()
+                .getDeletedCount();
+        checkExactlyOneAggregateRemoved(deletedCount, id);
     }
 
-    private void checkExactlyOneAggregateRemoved(int n, ID id) {
+    private void checkExactlyOneAggregateRemoved(long n, ID id) {
         if (n == 0) {
             throw new AggregateNotFoundException("Non-existent aggregate " + getAggregateRootClass()
                     .getSimpleName() + " identified with " + id + " cannot be removed");
@@ -152,23 +166,18 @@ public abstract class BaseMorphiaRepository<A extends AggregateRoot<ID>, ID> ext
 
     @Override
     public void clear() {
-        DBCollection collection = datastore.getCollection(getAggregateRootClass());
-        collection.drop();
+        MongoCollection<A> collection = datastore.getCollection(getAggregateRootClass());
         collection.dropIndexes();
+        collection.drop();
     }
 
-    private Query<A> buildQuery(Specification<A> specification, Option... options) {
-        Query<A> query = datastore.createQuery(getAggregateRootClass());
-        specificationTranslator.translate(
+    private Query<A> buildQuery(Specification<A> specification) {
+        Query<A> query = datastore.find(getAggregateRootClass());
+        Filter filter = specificationTranslator.translate(
                 specification,
-                new MorphiaTranslationContext<>(query)
-        );
-        for (Option option : options) {
-            if (option instanceof SortOption) {
-                applySort(query, ((SortOption) option));
-            }
-        }
-        return query;
+                new MorphiaTranslationContext<>(query));
+        logger.info("Querying {} with filter {}",getAggregateRootClass(),filter);
+        return query.filter(filter);
     }
 
     private FindOptions buildFindOptions(Option... options) {
@@ -178,6 +187,8 @@ public abstract class BaseMorphiaRepository<A extends AggregateRoot<ID>, ID> ext
                 applyOffset(findOptions, ((OffsetOption) option));
             } else if (option instanceof LimitOption) {
                 applyLimit(findOptions, ((LimitOption) option));
+            } else if (option instanceof SortOption) {
+                applySort(findOptions, ((SortOption) option));
             }
         }
         return findOptions;
@@ -197,21 +208,22 @@ public abstract class BaseMorphiaRepository<A extends AggregateRoot<ID>, ID> ext
         findOptions.limit((int) limit);
     }
 
-    private void applySort(Query<?> query, SortOption sortOption) {
+    private void applySort(FindOptions findOptions, SortOption sortOption) {
         List<Sort> sorts = new ArrayList<>();
         for (SortOption.SortedAttribute sortedAttribute : sortOption.getSortedAttributes()) {
             switch (sortedAttribute.getDirection()) {
-                case ASCENDING:
-                    sorts.add(Sort.ascending(sortedAttribute.getAttribute()));
-                    break;
-                case DESCENDING:
-                    sorts.add(Sort.descending(sortedAttribute.getAttribute()));
-                    break;
-                default:
-                    throw new IllegalArgumentException(
-                            "Unsupported sort direction " + sortedAttribute.getDirection());
+            case ASCENDING:
+                sorts.add(Sort.ascending(sortedAttribute.getAttribute()));
+                break;
+            case DESCENDING:
+                sorts.add(Sort.descending(sortedAttribute.getAttribute()));
+                break;
+            default:
+                throw new IllegalArgumentException(
+                        "Unsupported sort direction " + sortedAttribute.getDirection());
             }
         }
-        query.order(sorts.toArray(new Sort[0]));
+
+        findOptions.sort(sorts.toArray(new Sort[0]));
     }
 }

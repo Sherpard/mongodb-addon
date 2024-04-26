@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2021, The SeedStack authors <http://seedstack.org>
+ * Copyright © 2013-2024, The SeedStack authors <http://seedstack.org>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -7,30 +7,34 @@
  */
 package org.seedstack.mongodb.morphia.internal;
 
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
-import com.mongodb.MongoClient;
-import dev.morphia.Datastore;
-import dev.morphia.Morphia;
-import org.seedstack.mongodb.morphia.MorphiaDatastore;
-import org.seedstack.seed.Application;
+import static org.seedstack.mongodb.morphia.internal.MorphiaUtils.createDatastoreAnnotation;
+import static org.seedstack.mongodb.morphia.internal.MorphiaUtils.getMongoClientConfig;
+
+import java.util.Arrays;
 
 import javax.inject.Inject;
 
-import static org.seedstack.mongodb.morphia.internal.MorphiaUtils.createDatastoreAnnotation;
-import static org.seedstack.mongodb.morphia.internal.MorphiaUtils.getMongoClientConfig;
+import org.seedstack.mongodb.morphia.MorphiaDatastore;
+import org.seedstack.seed.Application;
+
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
+import com.mongodb.client.MongoClient;
+
+import dev.morphia.Datastore;
+import dev.morphia.Morphia;
 
 public class DatastoreFactory {
     private final Application application;
     private final Injector injector;
-    private final Morphia morphia;
+    private final ValidatingEntityInterceptor validationInterceptor;
 
     @Inject
-    DatastoreFactory(Application application, Injector injector, Morphia morphia) {
+    DatastoreFactory(Application application, Injector injector, ValidatingEntityInterceptor validationInterceptor) {
         this.application = application;
         this.injector = injector;
-        this.morphia = morphia;
+        this.validationInterceptor = validationInterceptor;
     }
 
     public Datastore createDatastore(Class<?> morphiaClass) {
@@ -42,12 +46,9 @@ public class DatastoreFactory {
     }
 
     public Datastore createDatastore(String clientName, String dbName) {
-        return morphia.createDatastore(
-                injector.getInstance(Key.get(MongoClient.class, Names.named(clientName))),
-                MorphiaUtils.resolveDatabaseAlias(
-                        getMongoClientConfig(application, clientName),
-                        dbName
-                )
-        );
+        MongoClient client = injector.getInstance(Key.get(MongoClient.class, Names.named(clientName)));
+        String dbAlias = MorphiaUtils.resolveDatabaseAlias(getMongoClientConfig(application, clientName), dbName);
+
+        return new DatastoreWrapper(Morphia.createDatastore(client, dbAlias), Arrays.asList(validationInterceptor));
     }
 }
