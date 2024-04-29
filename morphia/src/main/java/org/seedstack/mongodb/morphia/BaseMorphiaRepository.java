@@ -30,8 +30,6 @@ import org.seedstack.business.specification.Specification;
 import org.seedstack.business.spi.SpecificationTranslator;
 import org.seedstack.mongodb.morphia.internal.DatastoreFactory;
 import org.seedstack.mongodb.morphia.internal.specification.MorphiaTranslationContext;
-import org.seedstack.seed.Logging;
-import org.slf4j.Logger;
 
 import com.mongodb.client.MongoCollection;
 
@@ -46,6 +44,7 @@ import dev.morphia.query.filters.Filter;
 import dev.morphia.query.filters.Filters;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+@SuppressWarnings("rawtypes")
 /**
  * This class can serve as a base class for Morphia repositories. It provides methods for common
  * CRUD operations as well as access to the data store through the {@link #getDatastore()} ()}
@@ -59,10 +58,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 public abstract class BaseMorphiaRepository<A extends AggregateRoot<ID>, ID> extends BaseRepository<A, ID> {
     public static final String ID_KEY = "_id";
     private Datastore datastore;
-    private SpecificationTranslator<MorphiaTranslationContext, Filter> specificationTranslator;
 
-    @Logging
-    private Logger logger;
+    private SpecificationTranslator<MorphiaTranslationContext, Filter> specificationTranslator;
 
     public BaseMorphiaRepository() {
 
@@ -176,7 +173,6 @@ public abstract class BaseMorphiaRepository<A extends AggregateRoot<ID>, ID> ext
         Filter filter = specificationTranslator.translate(
                 specification,
                 new MorphiaTranslationContext<>(query));
-        logger.info("Querying {} with filter {}",getAggregateRootClass(),filter);
         return query.filter(filter);
     }
 

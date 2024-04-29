@@ -10,8 +10,6 @@ package org.seedstack.mongodb.morphia.internal;
 import static org.seedstack.mongodb.morphia.internal.MorphiaUtils.createDatastoreAnnotation;
 import static org.seedstack.mongodb.morphia.internal.MorphiaUtils.getMongoClientConfig;
 
-import java.util.Arrays;
-
 import javax.inject.Inject;
 
 import org.seedstack.mongodb.morphia.MorphiaDatastore;
@@ -28,13 +26,13 @@ import dev.morphia.Morphia;
 public class DatastoreFactory {
     private final Application application;
     private final Injector injector;
-    private final ValidatingEntityInterceptor validationInterceptor;
+    private final SeedEntityListener seedEntityListener;
 
     @Inject
-    DatastoreFactory(Application application, Injector injector, ValidatingEntityInterceptor validationInterceptor) {
+    DatastoreFactory(Application application, Injector injector, SeedEntityListener seedEntityListener) {
         this.application = application;
         this.injector = injector;
-        this.validationInterceptor = validationInterceptor;
+        this.seedEntityListener = seedEntityListener;
     }
 
     public Datastore createDatastore(Class<?> morphiaClass) {
@@ -49,6 +47,6 @@ public class DatastoreFactory {
         MongoClient client = injector.getInstance(Key.get(MongoClient.class, Names.named(clientName)));
         String dbAlias = MorphiaUtils.resolveDatabaseAlias(getMongoClientConfig(application, clientName), dbName);
 
-        return new DatastoreWrapper(Morphia.createDatastore(client, dbAlias), Arrays.asList(validationInterceptor));
+        return new DatastoreWrapper(Morphia.createDatastore(client, dbAlias), seedEntityListener);
     }
 }

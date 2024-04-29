@@ -8,14 +8,14 @@
 package org.seedstack.mongodb.morphia.internal;
 
 import static org.seedstack.shed.reflect.AnnotationPredicates.elementAnnotatedWith;
-import static org.seedstack.shed.reflect.ClassPredicates.classImplements;
+import static org.seedstack.shed.reflect.ClassPredicates.classIs;
+import static org.seedstack.shed.reflect.ClassPredicates.classIsAssignableFrom;
 import static org.seedstack.shed.reflect.ClassPredicates.classIsInterface;
 import static org.seedstack.shed.reflect.ClassPredicates.classModifierIs;
 
 import java.lang.reflect.Modifier;
 import java.util.function.Predicate;
 
-import dev.morphia.EntityListener;
 import dev.morphia.annotations.Embedded;
 import dev.morphia.annotations.Entity;
 
@@ -25,7 +25,13 @@ class MorphiaPredicates {
             .and(elementAnnotatedWith(Entity.class, false)
                     .or(elementAnnotatedWith(Embedded.class, false)));
 
-    static Predicate<Class<?>> ENTITY_LISTENERS = classIsInterface().negate()
+    static Predicate<Class<?>> SEED_INJECTED_ENTITY_LISTENERS = classIsInterface().negate()
             .and(classModifierIs(Modifier.ABSTRACT).negate())
-            .and(classImplements(EntityListener.class));
+            .and(classIsAssignableFrom(org.seedstack.mongodb.morphia.EntityListener.class));
+
+    static Predicate<Class<?>> MORPHIA_RAW_ENTITY_LISTENERS = classIsInterface().negate()
+            .and(classModifierIs(Modifier.ABSTRACT).negate())
+            .and(classIsAssignableFrom(dev.morphia.EntityListener.class))
+            .and((classIs(SeedEntityListener.class)).negate()); // Ignore global listener
+
 }

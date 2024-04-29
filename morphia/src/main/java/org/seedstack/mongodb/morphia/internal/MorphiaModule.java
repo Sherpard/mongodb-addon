@@ -13,30 +13,35 @@ package org.seedstack.mongodb.morphia.internal;
 
 import java.util.Collection;
 
+import org.seedstack.mongodb.morphia.EntityListener;
 import org.seedstack.mongodb.morphia.MorphiaDatastore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
 
 import dev.morphia.Datastore;
 
 class MorphiaModule extends AbstractModule {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MorphiaModule.class);
     private final Collection<MorphiaDatastore> morphiaDatastoresAnnotation;
-    private final Collection<Class<?>> morphiaEntityListeners;
+    private final Collection<Class<? extends EntityListener<?>>> seedEntityListeners;
 
     MorphiaModule(Collection<MorphiaDatastore> morphiaDatastoresAnnotation,
-            Collection<Class<?>> morphiaEntityListeners) {
+            Collection<Class<? extends EntityListener<?>>> seedEntityListeners) {
         super();
         this.morphiaDatastoresAnnotation = morphiaDatastoresAnnotation;
-        this.morphiaEntityListeners = morphiaEntityListeners;
+        this.seedEntityListeners = seedEntityListeners;
 
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     protected void configure() {
         bind(DatastoreFactory.class);
-        bind(ValidatingEntityInterceptor.class);
 
         if (morphiaDatastoresAnnotation != null && !morphiaDatastoresAnnotation.isEmpty()) {
             for (MorphiaDatastore morphiaDatastore : morphiaDatastoresAnnotation) {
@@ -45,6 +50,16 @@ class MorphiaModule extends AbstractModule {
                 bind(Key.get(Datastore.class, morphiaDatastore)).toProvider(datastoreProvider).in(Scopes.SINGLETON);
             }
         }
+
+        Multibinder<EntityListener> entityListenerMultibinder = Multibinder.newSetBinder(binder(),
+                EntityListener.class);
+
+        for (Class<? extends EntityListener> listener : seedEntityListeners) {
+            LOGGER.debug("Binding {}", listener.toGenericString());
+            entityListenerMultibinder.addBinding().to(listener);
+        }
+
+        bind(SeedEntityListener.class).asEagerSingleton();
 
     }
 }

@@ -13,6 +13,7 @@ import java.util.HashSet;
 import javax.inject.Inject;
 
 import org.seedstack.mongodb.internal.MongoDbPlugin;
+import org.seedstack.mongodb.morphia.EntityListener;
 import org.seedstack.mongodb.morphia.MorphiaConfig;
 import org.seedstack.mongodb.morphia.MorphiaDatastore;
 import org.seedstack.seed.Application;
@@ -35,7 +36,8 @@ import io.nuun.kernel.api.plugin.request.ClasspathScanRequest;
 public class MorphiaPlugin extends AbstractSeedPlugin {
     private static final Logger LOGGER = LoggerFactory.getLogger(MorphiaPlugin.class);
     private final Collection<MorphiaDatastore> morphiaDatastores = new HashSet<>();
-    private final Collection<Class<?>> morphiaListeners = new HashSet<>();
+    private final Collection<Class<? extends EntityListener<?>>> seedEntityListeners = new HashSet<>();
+
     private MorphiaConfig config;
     @Inject
     private DatastoreFactory datastoreFactory;
@@ -54,19 +56,21 @@ public class MorphiaPlugin extends AbstractSeedPlugin {
     public Collection<ClasspathScanRequest> classpathScanRequests() {
         return classpathScanRequestBuilder()
                 .predicate(MorphiaPredicates.PERSISTED_CLASSES)
-                .predicate(MorphiaPredicates.ENTITY_LISTENERS)
+                .predicate(MorphiaPredicates.SEED_INJECTED_ENTITY_LISTENERS)
+                .predicate(MorphiaPredicates.MORPHIA_RAW_ENTITY_LISTENERS)
                 .build();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public InitState initialize(InitContext initContext) {
         Application application = getApplication();
         config = application.getConfiguration().get(MorphiaConfig.class);
 
-        boolean validationActive = ValidationManager.get()
+        boolean isValidationActive = ValidationManager.get()
                 .getValidationLevel() != ValidationManager.ValidationLevel.NONE;
 
-        if (validationActive) {
+        if (isValidationActive) {
             LOGGER.info("Validation is enabled on Morphia entities");
         } else {
             LOGGER.info("Validation is disabled on Morphia entities");
@@ -88,21 +92,34 @@ public class MorphiaPlugin extends AbstractSeedPlugin {
             LOGGER.info("No persisted classes found");
         }
 
-        if (!validationActive) {
-            return InitState.INITIALIZED;
+        Collection<Class<?>> morphiaListeners = initContext.scannedTypesByPredicate()
+                .get(MorphiaPredicates.MORPHIA_RAW_ENTITY_LISTENERS);
+
+        if (morphiaListeners != null && morphiaListeners.size() > 0) {
+            LOGGER.warn(
+                    "Morphia EntityListeners found. No injection will be performed over those EntityListeners." +
+                            "Activate debug logs to get more information");
+            if (LOGGER.isDebugEnabled()) {
+                morphiaListeners.forEach(
+                        listener -> LOGGER.debug("\t class '{}' will not have injection", listener.toGenericString()));
+            }
+
         }
 
-        
-        
-        Collection<Class<?>> morphiaEntityListeners = initContext.scannedTypesByPredicate()
-                .get(MorphiaPredicates.ENTITY_LISTENERS);
+        Collection<Class<?>> seedListeners = initContext.scannedTypesByPredicate()
+                .get(MorphiaPredicates.SEED_INJECTED_ENTITY_LISTENERS);
 
-        if (morphiaEntityListeners != null && !morphiaEntityListeners.isEmpty()) {
-            LOGGER.info("Found {} entity listeners", morphiaEntityListeners.size());
-            morphiaListeners.addAll(morphiaEntityListeners);
-        } else {
-            LOGGER.info("No entity listeners found");
+        if (seedListeners != null && seedListeners.size() > 0) {
+            for (Class<?> listener : seedListeners) {
+                if (!isValidationActive && listener.equals(ValidatingEntityInterceptor.class)) {
+                    continue;
+                }
+                LOGGER.debug("Detected '{}' EntityListener", listener.toGenericString());
+                this.seedEntityListeners.add((Class<? extends EntityListener<?>>) listener);
+            }
         }
+
+        LOGGER.info("{} EntityListeners loaded", seedListeners.size());
 
         return InitState.INITIALIZED;
     }
@@ -125,6 +142,6 @@ public class MorphiaPlugin extends AbstractSeedPlugin {
 
     @Override
     public Object nativeUnitModule() {
-        return new MorphiaModule(morphiaDatastores, morphiaListeners);
+        return new MorphiaModule(morphiaDatastores, seedEntityListeners);
     }
 }
