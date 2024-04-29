@@ -117,9 +117,10 @@ public class MorphiaPlugin extends AbstractSeedPlugin {
                 LOGGER.debug("Detected '{}' EntityListener", listener.toGenericString());
                 this.seedEntityListeners.add((Class<? extends EntityListener<?>>) listener);
             }
+            LOGGER.info("{} EntityListeners loaded", seedListeners.size());
+        } else {
+            LOGGER.info("No EntityListeners loaded");
         }
-
-        LOGGER.info("{} EntityListeners loaded", seedListeners.size());
 
         return InitState.INITIALIZED;
     }

@@ -15,7 +15,7 @@
     <parent>
         <groupId>org.seedstack.addons.mongodb</groupId>
         <artifactId>mongodb</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>5.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>mongodb-core</artifactId>
